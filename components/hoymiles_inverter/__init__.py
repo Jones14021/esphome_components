@@ -190,24 +190,14 @@ async def to_code(config):
         repository="https://github.com/tbnobody/OpenDTU.git#v24.2.12"
     )
 
-    # Das LDF ignoriert manchmal dynamische Variablen. Wir nutzen direkte Pfade.
+    # Die ECHTEN Ordnerstrukturen aus dem v24.2.12 Release
     cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/src")
     cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src")
     cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src/radio")
     
-    # Der kritische Pfad für TimeoutHelper:
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/TimeoutHelper/src")
+    # HIER IST DER FIX: Die Datei liegt direkt im TimeoutHelper-Ordner, es gibt dort kein /src!
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/TimeoutHelper")
     
-    # Zusätzlich binden wir den Ordner als separate ESPHome-Library ein!
-    # Das zwingt PlatformIO, diesen spezifischen Unterordner als eigenständige Library zu kompilieren:
-    cg.add_library(
-        name="TimeoutHelper",
-        version=None,
-        repository="https://github.com/tbnobody/OpenDTU.git#v24.2.12"
-    )
-    # Hier sagen wir, dass diese Library nur der TimeoutHelper-Ordner ist
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/TimeoutHelper/lib/TimeoutHelper/src")
-
     cg.add_platformio_option("lib_ldf_mode", "deep+")
     cg.add_build_flag("-DHOYMILES_RADIO_NRF=0")
     # =========================================================================
