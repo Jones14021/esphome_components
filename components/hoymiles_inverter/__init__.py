@@ -177,21 +177,13 @@ async def to_code(config):
     cg.add_platformio_option("build_unflags", ["-std=gnu++11", "-fno-exceptions"])
 
     # =========================================================================
-    # ESPHOME BEST PRACTICES: Bibliotheken festpinnen (OpenDTU v26.3.30)
+    # ESPHOME Lokale OpenDTU Integration
     # =========================================================================
     cg.add_library("SPI", None)
     cg.add_library("RadioLib", "7.7.1")
     cg.add_library("cJSON", None, "https://github.com/DaveGamble/cJSON.git#v1.7.18")
     cg.add_library("Frozen", None, "https://github.com/cesanta/frozen.git")
 
-    cg.add_library("OpenDTU", None, "https://github.com/tbnobody/OpenDTU.git#v26.3.30")
-
-    # Dem Compiler nur sagen, wo die Dateien liegen
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/src")
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src")
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src/radio")
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/TimeoutHelper/src")
-    
     cg.add_build_flag("-DHOYMILES_RADIO_NRF=0")
     # =========================================================================
     

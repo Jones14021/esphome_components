@@ -1,9 +1,14 @@
 #include "hoymiles_inverter.h"
 
-// Zwinge den Compiler, die OpenDTU Implementierungen mitzukompilieren (ESP-IDF Bypass)
-#include <Hoymiles.cpp>
-#include <HoymilesRadio.cpp>
-#include <HoymilesRadio_CMT.cpp>
+#include "hoymiles_inverter.h"
+
+// ESP-IDF CMake Bypass: Wir inkludieren die Quellcodes direkt!
+#include "opendtu_lib/TimeoutHelper.cpp"
+#include "opendtu_lib/HoymilesRadio.cpp"
+#include "opendtu_lib/HoymilesRadio_CMT.cpp"
+#include "opendtu_lib/Hoymiles.cpp"
+
+// ... der Rest deines Codes ...
 
 // Die originalen Radio-Header
 #include <HoymilesRadio_CMT.h>
