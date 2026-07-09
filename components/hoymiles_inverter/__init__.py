@@ -180,14 +180,18 @@ async def to_code(config):
     # ESPHOME BEST PRACTICES: Bibliotheken festpinnen (Freezing)
     # =========================================================================
     cg.add_library("SPI", None)
-    # Richtiges Freezing von GitHub-Releases über URL + "#tag"
     cg.add_library("OpenDTU", None, "https://github.com/tbnobody/OpenDTU.git#v24.2.12")
     cg.add_library("RadioLib", "7.7.1")
     cg.add_library("cJSON", "1.7.18")
     cg.add_library("Frozen", None, "https://github.com/cesanta/frozen.git")
 
+    # Dem Compiler sagen, wo er die OpenDTU Header findet
     cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src")
     cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src/radio")
+    
+    # HIER IST DER FIX FÜR TimeoutHelper.h:
+    cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU/lib/TimeoutHelper/src")
+    
     cg.add_build_flag("-DHOYMILES_RADIO_NRF=0")
     # =========================================================================
     
