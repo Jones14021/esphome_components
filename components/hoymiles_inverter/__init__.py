@@ -177,26 +177,39 @@ async def to_code(config):
     cg.add_platformio_option("build_unflags", ["-std=gnu++11", "-fno-exceptions"])
 
     # =========================================================================
-    # ESPHOME BEST PRACTICES: C++ Core-Files importieren (OpenDTU v26.3.30)
+    # ESPHOME BEST PRACTICES: C++ Core-Files importieren (LDF Bypass)
     # =========================================================================
     cg.add_library("SPI", None)
     cg.add_library("RadioLib", "7.7.1")
     cg.add_library("cJSON", None, "https://github.com/DaveGamble/cJSON.git#v1.7.18")
     cg.add_library("Frozen", None, "https://github.com/cesanta/frozen.git")
 
+    # Nur EINE Deklaration für OpenDTU!
     cg.add_library(
-        name="OpenDTU_Core",
+        name="OpenDTU",
         version=None,
         repository="https://github.com/tbnobody/OpenDTU.git#v26.3.30"
     )
 
-    # In v26.3.30 sind alle Header sauber in /src Unterordnern!
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/src")
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src")
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src/radio")
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/TimeoutHelper/src")
-    
+    # LDF tiefen Scannen erzwingen (off/chain/deep)
     cg.add_platformio_option("lib_ldf_mode", "deep+")
+    
+    # PlatformIO sagen, dass er die Ordner ALS QUELLCODE (src) behandeln soll, 
+    # nicht nur als Include-Header (-I). Das '-Wl,-rpath' oder 'build_src_filter'
+    # wäre elegant, aber ESPHome erlaubt hier src_filter im platformio_options.
+    cg.add_platformio_option(
+        "build_src_filter",
+        "+<*> -<.git/> -<.svn/> -<example/> -<examples/> -<test/> -<tests/> "
+        "+<.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src/> "
+        "+<.piolibdeps/${PIOENV}/OpenDTU/lib/TimeoutHelper/src/>"
+    )
+
+    # Und trotzdem alle globalen Includes setzen
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/src")
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src")
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src/radio")
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/TimeoutHelper/src")
+    
     cg.add_build_flag("-DHOYMILES_RADIO_NRF=0")
     # =========================================================================
     
