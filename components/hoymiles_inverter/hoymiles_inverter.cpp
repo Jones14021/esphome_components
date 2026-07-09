@@ -1,5 +1,17 @@
 #include "hoymiles_inverter.h"
 
+// Zwinge den Compiler, die OpenDTU Implementierungen mitzukompilieren (ESP-IDF Bypass)
+#include <Hoymiles.cpp>
+#include <HoymilesRadio.cpp>
+#include <HoymilesRadio_CMT.cpp>
+
+// Die originalen Radio-Header
+#include <HoymilesRadio_CMT.h>
+#include <HoymilesRadio_NRF.h>
+
+namespace esphome {
+// ... Rest deines Codes ...
+
 // NEU: Wir binden die neuen OpenDTU Radio Header direkt ein, 
 // da die init() Funktionen jetzt global ausgelagert sind.
 #include "HoymilesRadio_CMT.h"
