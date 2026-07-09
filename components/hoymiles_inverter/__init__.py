@@ -177,34 +177,16 @@ async def to_code(config):
     cg.add_platformio_option("build_unflags", ["-std=gnu++11", "-fno-exceptions"])
 
     # =========================================================================
-    # ESPHOME BEST PRACTICES: C++ Core-Files importieren (LDF Bypass)
+    # ESPHOME BEST PRACTICES: Bibliotheken festpinnen (OpenDTU v26.3.30)
     # =========================================================================
     cg.add_library("SPI", None)
     cg.add_library("RadioLib", "7.7.1")
     cg.add_library("cJSON", None, "https://github.com/DaveGamble/cJSON.git#v1.7.18")
     cg.add_library("Frozen", None, "https://github.com/cesanta/frozen.git")
 
-    # Nur EINE Deklaration für OpenDTU!
-    cg.add_library(
-        name="OpenDTU",
-        version=None,
-        repository="https://github.com/tbnobody/OpenDTU.git#v26.3.30"
-    )
+    cg.add_library("OpenDTU", None, "https://github.com/tbnobody/OpenDTU.git#v26.3.30")
 
-    # LDF tiefen Scannen erzwingen (off/chain/deep)
-    cg.add_platformio_option("lib_ldf_mode", "deep+")
-    
-    # PlatformIO sagen, dass er die Ordner ALS QUELLCODE (src) behandeln soll, 
-    # nicht nur als Include-Header (-I). Das '-Wl,-rpath' oder 'build_src_filter'
-    # wäre elegant, aber ESPHome erlaubt hier src_filter im platformio_options.
-    cg.add_platformio_option(
-        "build_src_filter",
-        "+<*> -<.git/> -<.svn/> -<example/> -<examples/> -<test/> -<tests/> "
-        "+<.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src/> "
-        "+<.piolibdeps/${PIOENV}/OpenDTU/lib/TimeoutHelper/src/>"
-    )
-
-    # Und trotzdem alle globalen Includes setzen
+    # Dem Compiler nur sagen, wo die Dateien liegen
     cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/src")
     cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src")
     cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src/radio")
