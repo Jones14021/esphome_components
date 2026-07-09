@@ -1,16 +1,7 @@
 #include "hoymiles_inverter.h"
 
-// ====================================================================
-// ESP-IDF / CMake Bypass:
-// Wir inkludieren die Quellcodes direkt, damit der Compiler gezwungen
-// wird, sie als Teil dieser Komponente zu bauen.
-// ====================================================================
-#include "opendtu_lib/TimeoutHelper.cpp"
-#include "opendtu_lib/HoymilesRadio.cpp"
-#include "opendtu_lib/HoymilesRadio_CMT.cpp"
-#include "opendtu_lib/HoymilesRadio_NRF.cpp"
-#include "opendtu_lib/Hoymiles.cpp"
-// ====================================================================
+#include "HoymilesRadio_CMT.h"
+#include "HoymilesRadio_NRF.h"
 
 namespace esphome {
 namespace hoymiles_inverter {

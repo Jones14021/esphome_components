@@ -6,7 +6,7 @@
 #include "esphome/components/output/float_output.h"
 #include "esphome/components/button/button.h"
 
-#include "opendtu_lib/Hoymiles.h"
+#include "Hoymiles.h"
 #include <Print.h>
 
 namespace esphome {

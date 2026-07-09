@@ -177,13 +177,16 @@ async def to_code(config):
     cg.add_platformio_option("build_unflags", ["-std=gnu++11", "-fno-exceptions"])
 
     # =========================================================================
-    # ESPHOME Lokale OpenDTU Integration
+    # ESPHOME BEST PRACTICES: Lokale OpenDTU Integration
     # =========================================================================
     cg.add_library("SPI", None)
     cg.add_library("RadioLib", "7.7.1")
     cg.add_library("cJSON", None, "https://github.com/DaveGamble/cJSON.git#v1.7.18")
     cg.add_library("Frozen", None, "https://github.com/cesanta/frozen.git")
 
+    # Wir fügen deinen lokalen Ordner zum globalen Include-Path hinzu!
+    cg.add_build_flag("-Isrc/esphome/components/hoymiles_inverter/opendtu_lib")
+    
     cg.add_build_flag("-DHOYMILES_RADIO_NRF=0")
     # =========================================================================
     
