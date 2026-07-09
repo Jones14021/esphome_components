@@ -1,26 +1,16 @@
 #include "hoymiles_inverter.h"
 
-#include "hoymiles_inverter.h"
-
-// ESP-IDF CMake Bypass: Wir inkludieren die Quellcodes direkt!
+// ====================================================================
+// ESP-IDF / CMake Bypass:
+// Wir inkludieren die Quellcodes direkt, damit der Compiler gezwungen
+// wird, sie als Teil dieser Komponente zu bauen.
+// ====================================================================
 #include "opendtu_lib/TimeoutHelper.cpp"
 #include "opendtu_lib/HoymilesRadio.cpp"
 #include "opendtu_lib/HoymilesRadio_CMT.cpp"
+#include "opendtu_lib/HoymilesRadio_NRF.cpp"
 #include "opendtu_lib/Hoymiles.cpp"
-
-// ... der Rest deines Codes ...
-
-// Die originalen Radio-Header
-#include <HoymilesRadio_CMT.h>
-#include <HoymilesRadio_NRF.h>
-
-namespace esphome {
-// ... Rest deines Codes ...
-
-// NEU: Wir binden die neuen OpenDTU Radio Header direkt ein, 
-// da die init() Funktionen jetzt global ausgelagert sind.
-#include "HoymilesRadio_CMT.h"
-#include "HoymilesRadio_NRF.h"
+// ====================================================================
 
 namespace esphome {
 namespace hoymiles_inverter {
@@ -82,7 +72,6 @@ void HoymilesNumber::control(float value) {
 
 void HoymilesInverter::setup() {
 }
-
 
 void HoymilesInverter::doretart(){
    this->inverter_->sendRestartControlRequest();
@@ -232,7 +221,7 @@ void HoymilesPlatform::set_pins(
     this->hoymiles_ = &Hoymiles;
     Hoymiles.setMessageOutput(new EsphLogPrint());
     
-    // NEU: Globale Initialisierungsfunktionen von OpenDTU nutzen
+    // Globale Initialisierungsfunktionen von OpenDTU nutzen
     ::init(); // Basis Init
     ::initCMT(sdio->get_pin(), clk->get_pin(), cs->get_pin(), fcs->get_pin(), gpio2->get_pin(), gpio3->get_pin());
 }
@@ -249,7 +238,7 @@ void HoymilesPlatform::setup() {
     this->hoymiles_ = &Hoymiles;
     Hoymiles.setMessageOutput(new EsphLogPrint());
     
-    // NEU: Globale Initialisierungsfunktionen
+    // Globale Initialisierungsfunktionen
     ::init();
     ::initCMT(sdio, clk, cs, fcs, gpio2, gpio3);
 
@@ -274,7 +263,7 @@ void HoymilesPlatform::update() {
 }
 
 void HoymilesPlatform::loop() {
-    // NEU: Globale Getter-Funktion von OpenDTU nutzen
+    // Globale Getter-Funktion von OpenDTU nutzen
     if(::getRadioCmt() != nullptr) {
         ::getRadioCmt()->loop();
     }
