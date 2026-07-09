@@ -177,7 +177,7 @@ async def to_code(config):
     cg.add_platformio_option("build_unflags", ["-std=gnu++11", "-fno-exceptions"])
 
     # =========================================================================
-    # ESPHOME BEST PRACTICES: C++ Core-Files importieren
+    # ESPHOME BEST PRACTICES: C++ Core-Files importieren (OpenDTU v26.3.30)
     # =========================================================================
     cg.add_library("SPI", None)
     cg.add_library("RadioLib", "7.7.1")
@@ -187,16 +187,14 @@ async def to_code(config):
     cg.add_library(
         name="OpenDTU_Core",
         version=None,
-        repository="https://github.com/tbnobody/OpenDTU.git#v24.2.12"
+        repository="https://github.com/tbnobody/OpenDTU.git#v26.3.30"
     )
 
-    # Die ECHTEN Ordnerstrukturen aus dem v24.2.12 Release
+    # In v26.3.30 sind alle Header sauber in /src Unterordnern!
     cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/src")
     cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src")
     cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src/radio")
-    
-    # HIER IST DER FIX: Die Datei liegt direkt im TimeoutHelper-Ordner, es gibt dort kein /src!
-    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/TimeoutHelper")
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/TimeoutHelper/src")
     
     cg.add_platformio_option("lib_ldf_mode", "deep+")
     cg.add_build_flag("-DHOYMILES_RADIO_NRF=0")
