@@ -177,13 +177,11 @@ async def to_code(config):
     cg.add_platformio_option("build_unflags", ["-std=gnu++11", "-fno-exceptions"])
 
     # =========================================================================
-    # ESPHOME BEST PRACTICES: C++ Core-Files importieren (Ohne Pfad-Chaos)
+    # ESPHOME BEST PRACTICES: C++ Core-Files importieren
     # =========================================================================
     cg.add_library("SPI", None)
     cg.add_library("RadioLib", "7.7.1")
     cg.add_library("cJSON", None, "https://github.com/DaveGamble/cJSON.git#v1.7.18")
-    
-    # FIX: Kein Schrägstrich mehr im Bibliotheks-Namen für Frozen!
     cg.add_library("Frozen", None, "https://github.com/cesanta/frozen.git")
 
     cg.add_library(
@@ -192,10 +190,24 @@ async def to_code(config):
         repository="https://github.com/tbnobody/OpenDTU.git#v24.2.12"
     )
 
-    cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src")
-    cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src/radio")
-    cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU_Core/lib/TimeoutHelper/src")
+    # Das LDF ignoriert manchmal dynamische Variablen. Wir nutzen direkte Pfade.
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/src")
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src")
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src/radio")
     
+    # Der kritische Pfad für TimeoutHelper:
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU_Core/lib/TimeoutHelper/src")
+    
+    # Zusätzlich binden wir den Ordner als separate ESPHome-Library ein!
+    # Das zwingt PlatformIO, diesen spezifischen Unterordner als eigenständige Library zu kompilieren:
+    cg.add_library(
+        name="TimeoutHelper",
+        version=None,
+        repository="https://github.com/tbnobody/OpenDTU.git#v24.2.12"
+    )
+    # Hier sagen wir, dass diese Library nur der TimeoutHelper-Ordner ist
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/TimeoutHelper/lib/TimeoutHelper/src")
+
     cg.add_platformio_option("lib_ldf_mode", "deep+")
     cg.add_build_flag("-DHOYMILES_RADIO_NRF=0")
     # =========================================================================
