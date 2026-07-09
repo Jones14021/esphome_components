@@ -180,10 +180,11 @@ async def to_code(config):
     # ESPHOME BEST PRACTICES: Bibliotheken festpinnen (Freezing)
     # =========================================================================
     cg.add_library("SPI", None)
-    cg.add_library("tbnobody/OpenDTU", "v24.2.12")
-    cg.add_library("jgromes/RadioLib", "7.7.1")
-    cg.add_library("DaveGamble/cJSON", "1.7.18")
-    cg.add_library("cesanta/Frozen", None, "https://github.com/cesanta/frozen.git")
+    # Richtiges Freezing von GitHub-Releases über URL + "#tag"
+    cg.add_library("OpenDTU", None, "https://github.com/tbnobody/OpenDTU.git#v24.2.12")
+    cg.add_library("RadioLib", "7.7.1")
+    cg.add_library("cJSON", "1.7.18")
+    cg.add_library("Frozen", None, "https://github.com/cesanta/frozen.git")
 
     cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src")
     cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src/radio")
