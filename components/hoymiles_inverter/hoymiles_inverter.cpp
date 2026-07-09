@@ -1,5 +1,22 @@
 #include "hoymiles_inverter.h"
 
+// Zwinge den Compiler, die OpenDTU Implementierungen mitzukompilieren (ESP-IDF Bypass)
+#include <Hoymiles.cpp>
+#include <HoymilesRadio.cpp>
+#include <HoymilesRadio_CMT.cpp>
+
+// Die originalen Radio-Header
+#include <HoymilesRadio_CMT.h>
+#include <HoymilesRadio_NRF.h>
+
+namespace esphome {
+// ... Rest deines Codes ...
+
+// NEU: Wir binden die neuen OpenDTU Radio Header direkt ein, 
+// da die init() Funktionen jetzt global ausgelagert sind.
+#include "HoymilesRadio_CMT.h"
+#include "HoymilesRadio_NRF.h"
+
 namespace esphome {
 namespace hoymiles_inverter {
 
@@ -19,9 +36,10 @@ size_t EsphLogPrint::write(uint8_t value) {
     return 1;
 }
 
+// BUGFIX: Die Parent-Klasse von Button war in der .h falsch deklariert.
+// Wenn die Deklaration behoben ist, kompiliert dies fehlerfrei.
 void HoymilesButton::press_action(){
     this->parent_->doretart();
-    // this->control_callback_.call(value);
 }
 
 void PercentFloatOutput::write_state(float value){
@@ -30,7 +48,6 @@ void PercentFloatOutput::write_state(float value){
 
 void PercentNumber::setup() {
     float value;
-    // ESP_LOGD("Number" , "Entered into PercentNumber setup()");
     this->pref_ = global_preferences->make_preference<float>(this->get_object_id_hash());
     if (!this->pref_.load(&value)) value = this->get_percent_power();
     this->set_percent_power(value);
@@ -68,44 +85,29 @@ void HoymilesInverter::doretart(){
 }
 
 void HoymilesInverter::write_float(float value){
-     if (value != NULL){ //NAN
+     // BUGFIX: NULL Check bei float ist invalide C++ Syntax. std::isnan wird genutzt.
+     if (!std::isnan(value)){ 
        this->inverter_->sendActivePowerControlRequest(value*100, PowerLimitControlType::RelativNonPersistent);
        this->active_ = true;
      }
-
 }
 
-// void HoymilesInverter::set_limit_percent_output(PercentFloatOutput* output) {    
-//     this->limit_percent_output_ = output;
-//     output->add_control_callback([this](float value) {
-//         if (this->inverter_ != nullptr) {
-//             ESP_LOGI(TAG, "set_limit_percent_output(): New percent: %.0f", value);
-//             this->inverter_->sendActivePowerControlRequest(value, PowerLimitControlType::RelativNonPersistent);
-//             // this->inverter_->sendActivePowerControlRequest(value, PowerLimitControlType::RelativPersistent);    
-//         }
-//     });
-// }
-
-//void HoymilesInverter::set_limit_percent_number(HoymilesNumber* number) {
 void HoymilesInverter::set_limit_percent_number(PercentNumber* number) {    
     this->limit_percent_number_ = number;
     number->add_control_callback([this](float value) {
         if (this->inverter_ != nullptr) {
             ESP_LOGI(TAG, "set_limit_percent_number(): New limit percent: %.0f", value);
             this->inverter_->sendActivePowerControlRequest(value, PowerLimitControlType::RelativNonPersistent);
-            // this->inverter_->sendActivePowerControlRequest(value, PowerLimitControlType::RelativPersistent);   
         }
     });
 }
 
-//void HoymilesInverter::set_limit_absolute_number(HoymilesNumber* number) {
 void HoymilesInverter::set_limit_absolute_number(AbsoluteNumber* number) {     
     this->limit_absolute_number_ = number;
     number->add_control_callback([this](float value) {
         if (this->inverter_ != nullptr) {
             ESP_LOGI(TAG, "set_limit_absolute_number(): New limit absolute: %.0f", value);
             this->inverter_->sendActivePowerControlRequest(value, PowerLimitControlType::AbsolutNonPersistent);
-            // this->inverter_->sendActivePowerControlRequest(value, PowerLimitControlType::AbsolutPersistent);
         }
     });
 }
@@ -118,10 +120,7 @@ void HoymilesInverter::loop() {
     if (is_reachable_sensor_ != nullptr) {
         is_reachable_sensor_->publish_state(this->inverter_->isReachable());
     }
-    // if (check_updated(this->inverter_->DevInfo(), dev_info_last_update_)) {
-    //     dev_info_last_update_ = this->inverter_->DevInfo()->getLastUpdate();
-    //     ESP_LOGD(TAG, "loop(): DevInfo updated: %s, %d, %d", this->inverter_->DevInfo()->getHwVersion(), this->inverter_->isProducing(), this->inverter_->isReachable());
-    // }
+    
     if (check_updated(this->inverter_->Statistics(), stat_last_update_)) {
         stat_last_update_ = this->inverter_->Statistics()->getLastUpdate();
         auto dc_channels = this->inverter_->Statistics()->getChannelsByType(ChannelType_t::TYPE_DC);
@@ -151,10 +150,10 @@ void HoymilesInverter::loop() {
                 ChannelType_t::TYPE_INV,
                 inv_channels.front());
         }
-        ESP_LOGVV("RADIO", "RSSI code: %d" , radio_->getRssiCode());
-       
-        if (rssi_ !=nullptr){
-            rssi_->publish_state(radio_->getRssiDBm());
+        
+        // BUGFIX: Rssi Auslesen angepasst an neue OpenDTU API
+        if (rssi_ !=nullptr && getRadioCmt() != nullptr){
+            rssi_->publish_state(getRadioCmt()->getRssiDBm());
         }
     }
 
@@ -163,15 +162,10 @@ void HoymilesInverter::loop() {
      auto max_power = this->inverter_->DevInfo()->getMaxPower();
      if (limit_percent_number_ != nullptr) {
         limit_percent_number_->publish_state(percent);
-        // limit_percent_number_->publish_state(100);
      }
      if (limit_absolute_number_ != nullptr) {
-        auto max_power = this->inverter_->DevInfo()->getMaxPower();
-        // limit_absolute_number_->publish_state((connected && (max_power > 0))? percent * max_power / 100.0: NAN);
         limit_absolute_number_->publish_state(max_power);
-        // limit_absolute_number_->publish_state(1000); 
      }
-     //updateConfiguration(true, this->inverter_->SystemConfigPara());
      this->first_ = false;
    }
     
@@ -187,28 +181,13 @@ void HoymilesInverter::updateConfiguration(bool connected, SystemConfigParaParse
     float percent = parser->getLimitPercent();
     ESP_LOGI(TAG, "updateConfiguration(): Limit percent received: %.0f", percent);
     if (limit_percent_number_ != nullptr) {
-        //limit_percent_number_->publish_state(connected? percent: NAN);
         limit_percent_number_->publish_state(percent);
     }
     if (limit_absolute_number_ != nullptr) {
         auto max_power = this->inverter_->DevInfo()->getMaxPower();
-        // limit_absolute_number_->publish_state((connected && (max_power > 0))? percent * max_power / 100.0: NAN);
         limit_absolute_number_->publish_state(percent * max_power / 100.0);
     }
 }
-
-
-// void HoymilesInverter::updateOutput(bool connected, SystemConfigParaParser* parser){
-//    ESP_LOGD(TAG, "update output");
-   
-//    float percent;
-//    if (this->percent_output_ != nullptr) {   
-//        // percent = this->output_percent_->get_state();
-//        // percent = output_percent_->get_state();
-//        this->inverter_->sendActivePowerControlRequest(percent, PowerLimitControlType::AbsolutNonPersistent);
-//    }    
-// }
-
 
 void HoymilesChannel::setup() {
 }
@@ -236,7 +215,6 @@ void HoymilesChannel::updateSensors(bool connected, StatisticsParser* stat, Chan
     }
 }
 
-
 void HoymilesPlatform::set_pins(
     esphome::InternalGPIOPin* sdio,
     esphome::InternalGPIOPin* clk,
@@ -245,35 +223,31 @@ void HoymilesPlatform::set_pins(
     esphome::InternalGPIOPin* gpio2,
     esphome::InternalGPIOPin* gpio3
 ) {
-    ESP_LOGI(TAG, "set_pins(): Setting up Hoymiles instance");
+    ESP_LOGI(TAG, "set_pins(): Setting up Hoymiles instance (CMT2300A only)");
     this->hoymiles_ = &Hoymiles;
     Hoymiles.setMessageOutput(new EsphLogPrint());
-    this->hoymiles_->init();
-    this->hoymiles_->initCMT(sdio->get_pin(), clk->get_pin(), cs->get_pin(), fcs->get_pin(), gpio2->get_pin(), gpio3->get_pin());
+    
+    // NEU: Globale Initialisierungsfunktionen von OpenDTU nutzen
+    ::init(); // Basis Init
+    ::initCMT(sdio->get_pin(), clk->get_pin(), cs->get_pin(), fcs->get_pin(), gpio2->get_pin(), gpio3->get_pin());
 }
 
 void HoymilesPlatform::setup() {
-    ESP_LOGI(TAG, "set_pins(): Setting up Hoymiles instance");
+    ESP_LOGI(TAG, "setup(): Setting up Hoymiles Platform");
     const int8_t sdio=this->sdio_->get_pin();
     const int8_t clk=this->clk_->get_pin();
     const int8_t cs=this->cs_->get_pin();
     const int8_t fcs=this->fcs_->get_pin();
-    int8_t gpio2=this->gpio2_->get_pin();
-    int8_t gpio3=this->gpio3_->get_pin();
-    if(this->gpio2_ == nullptr){
-        gpio2 = -1;   
-    }
-    if(this->gpio3_ == nullptr){
-        gpio3 = -1;
-    }
+    int8_t gpio2 = (this->gpio2_ == nullptr) ? -1 : this->gpio2_->get_pin();
+    int8_t gpio3 = (this->gpio3_ == nullptr) ? -1 : this->gpio3_->get_pin();
 
     this->hoymiles_ = &Hoymiles;
     Hoymiles.setMessageOutput(new EsphLogPrint());
-    this->hoymiles_->init();
-    this->hoymiles_->initCMT(sdio, clk, cs, fcs, gpio2, gpio3);
-
-    //  Original part //
     
+    // NEU: Globale Initialisierungsfunktionen
+    ::init();
+    ::initCMT(sdio, clk, cs, fcs, gpio2, gpio3);
+
     for (uint8_t i = 0; i < this->inverters_.size(); i++) {
         auto inv = this->inverters_[i];
         auto name = "Inv_" + std::to_string(i);
@@ -287,7 +261,6 @@ void HoymilesPlatform::setup() {
             ESP_LOGW(TAG, "Invalid inverter serial# %" PRIu64, inv->serial());
         }
     }
-
 }
 
 void HoymilesPlatform::update() {
@@ -295,9 +268,11 @@ void HoymilesPlatform::update() {
     this->hoymiles_->loop();
 }
 
-
 void HoymilesPlatform::loop() {
-    this->hoymiles_->getRadioCmt()->loop();
+    // NEU: Globale Getter-Funktion von OpenDTU nutzen
+    if(::getRadioCmt() != nullptr) {
+        ::getRadioCmt()->loop();
+    }
 }
 
 }

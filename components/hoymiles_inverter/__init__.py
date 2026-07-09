@@ -176,30 +176,24 @@ async def to_code(config):
     cg.add_build_flag("-fexceptions")
     cg.add_platformio_option("build_unflags", ["-std=gnu++11", "-fno-exceptions"])
 
-    ############# with new OpenDTU lib #############
-    # cg.add_library("SPI", None)  ### Works with arduino v2.0.x no more from arduino v3.1.x... 
-    # cg.add_library("RF24", None, "https://github.com/nRF24/RF24") # needed for SPImanager version
-    # cg.add_library("SpiManager", None, "https://github.com/SeByDocKy/SpiManager") # needed for SPImanager version
-    # cg.add_library("CMT2300A", None, "https://github.com/SeByDocKy/CMT2300A") # -> Use new SPImanager framework...
-    # cg.add_library("Hoymiles-lib", None, "https://github.com/SeByDocKy/Hoymiles-lib")
-    # cg.add_library("Hoymiles", None, "https://github.com/SeByDocKy/Hoymiles") ## new version with SPImanager ####
+    # =========================================================================
+    # ESPHOME BEST PRACTICES: Bibliotheken festpinnen (OpenDTU v26.3.30)
+    # =========================================================================
+    cg.add_library("SPI", None)
+    cg.add_library("RadioLib", "7.7.1")
+    cg.add_library("cJSON", None, "https://github.com/DaveGamble/cJSON.git#v1.7.18")
+    cg.add_library("Frozen", None, "https://github.com/cesanta/frozen.git")
 
+    cg.add_library("OpenDTU", None, "https://github.com/tbnobody/OpenDTU.git#v26.3.30")
 
-    ############# With old lib, modified to work properly with ESPhome up to 2024.6.3 , prior to OpenDTU v24.9.26 #############
-    cg.add_library("SPI", None)  ### Works with arduino v2.0.x no more from arduino v3.1.x... 
-    cg.add_library("CMT2300A", None, "https://github.com/SeByDocKy/esphome-CMT2300A") # -> without SPImanager framework...
-    cg.add_library("Hoymiles-lib", None, "https://github.com/SeByDocKy/Hoymiles-lib")
-    cg.add_library("Hoymiles", None, "https://github.com/SeByDocKy/esphome-hoymiles-main") ## former version without SPImanager ####
-
-    ############# With old lib, prior to OpenDTU v24.9.26 #############
+    # Dem Compiler nur sagen, wo die Dateien liegen
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/src")
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src")
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/Hoymiles/src/radio")
+    cg.add_build_flag("-I.piolibdeps/${PIOENV}/OpenDTU/lib/TimeoutHelper/src")
     
-    
-    # cg.add_library("SPI", None)
-    # cg.add_library("esphome-hoymiles-libs", None, "https://github.com/nedyarrd/esphome-hoymiles-libs")
-    # cg.add_library("Hoymiles", None, "https://github.com/nedyarrd/esphome-hoymiles-main") ## former version without spimanager ####
-    # cg.add_library("CMT2300A", None, "https://github.com/nedyarrd/esphome-CMT2300A")
-
-
+    cg.add_build_flag("-DHOYMILES_RADIO_NRF=0")
+    # =========================================================================
     
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
@@ -221,16 +215,10 @@ async def to_code(config):
         if CONF_RSSI in inv_conf:
             cg.add(inv_var.set_rssi(await sensor.new_sensor(inv_conf[CONF_RSSI])))
         if CONF_LIMIT_PERCENT in inv_conf:
-            # n = await number.new_number(inv_conf[CONF_LIMIT_PERCENT], min_value=0, max_value=100, step=2)
-            # await cg.register_component(n, inv_conf[CONF_LIMIT_PERCENT])
-            # await cg.register_parented(n, inv_conf)
-            # cg.add(inv_var.set_limit_percent_number(n))
-        
             cg.add(inv_var.set_limit_percent_number(await number.new_number(inv_conf[CONF_LIMIT_PERCENT], min_value=0, max_value=100, step=2)))
         if CONF_LIMIT_ABSOLUTE in inv_conf:
             cg.add(inv_var.set_limit_absolute_number(await number.new_number(inv_conf[CONF_LIMIT_ABSOLUTE], min_value=0, max_value=2000, step=20)))
         if CONF_PERCENT_OUTPUT in inv_conf:
-            # await output.register_output(var, config)
             conf = inv_conf[CONF_PERCENT_OUTPUT]
             out = cg.new_Pvariable(conf[CONF_ID])
             await output.register_output(out, conf)
@@ -250,15 +238,3 @@ async def to_code(config):
       cg.add(var.set_gpio2(await cg.gpio_pin_expression(config[CONF_PINS][CONF_GPIO2])))
     if CONF_GPIO3 in config[CONF_PINS]:
       cg.add(var.set_gpio3(await cg.gpio_pin_expression(config[CONF_PINS][CONF_GPIO3])))
-     
-
-    # cg.add(var.set_pins(
-    #     await cg.gpio_pin_expression(config[CONF_PINS][CONF_SDIO]),
-    #     await cg.gpio_pin_expression(config[CONF_PINS][CONF_CLK]),
-    #     await cg.gpio_pin_expression(config[CONF_PINS][CONF_CS]),
-    #     await cg.gpio_pin_expression(config[CONF_PINS][CONF_FCS]),
-    #     await cg.gpio_pin_expression(config[CONF_PINS][CONF_GPIO2]),
-    #     await cg.gpio_pin_expression(config[CONF_PINS][CONF_GPIO3]),
-    # ))
-    
-   
