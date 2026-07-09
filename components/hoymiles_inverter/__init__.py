@@ -180,11 +180,11 @@ async def to_code(config):
     # ESPHOME BEST PRACTICES: C++ Core-Files importieren (Ohne Pfad-Chaos)
     # =========================================================================
     cg.add_library("SPI", None)
-    cg.add_library("jgromes/RadioLib", "7.7.1")
-    
-    # FIX: cJSON direkt über GitHub laden, da die PlatformIO Registry zickt
+    cg.add_library("RadioLib", "7.7.1")
     cg.add_library("cJSON", None, "https://github.com/DaveGamble/cJSON.git#v1.7.18")
-    cg.add_library("cesanta/Frozen", None, "https://github.com/cesanta/frozen.git")
+    
+    # FIX: Kein Schrägstrich mehr im Bibliotheks-Namen für Frozen!
+    cg.add_library("Frozen", None, "https://github.com/cesanta/frozen.git")
 
     cg.add_library(
         name="OpenDTU_Core",
