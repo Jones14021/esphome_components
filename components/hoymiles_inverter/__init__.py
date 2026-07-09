@@ -181,24 +181,21 @@ async def to_code(config):
     # =========================================================================
     cg.add_library("SPI", None)
     cg.add_library("jgromes/RadioLib", "7.7.1")
-    cg.add_library("DaveGamble/cJSON", "1.7.18")
+    
+    # FIX: cJSON direkt über GitHub laden, da die PlatformIO Registry zickt
+    cg.add_library("cJSON", None, "https://github.com/DaveGamble/cJSON.git#v1.7.18")
     cg.add_library("cesanta/Frozen", None, "https://github.com/cesanta/frozen.git")
 
-    # Statt das ganze OpenDTU zu laden, kopieren wir nur die nackten C++-Dateien 
-    # für Hoymiles, MqttSubscribeParser und TimeoutHelper direkt ins ESPHome src-Verzeichnis.
-    # So gibt es nie wieder "File Not Found" oder Linker-Fehler.
     cg.add_library(
         name="OpenDTU_Core",
         version=None,
         repository="https://github.com/tbnobody/OpenDTU.git#v24.2.12"
     )
 
-    # Wir zwingen PlatformIO dazu, die OpenDTU-Ordner als normale Quelltexte zu betrachten
     cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src")
     cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU_Core/lib/Hoymiles/src/radio")
     cg.add_build_flag("-I.pio/libdeps/${PIOENV}/OpenDTU_Core/lib/TimeoutHelper/src")
     
-    # PlatformIO muss die CPPs mitkompilieren (Das löst den Kompilierungs-Abbruch)
     cg.add_platformio_option("lib_ldf_mode", "deep+")
     cg.add_build_flag("-DHOYMILES_RADIO_NRF=0")
     # =========================================================================
